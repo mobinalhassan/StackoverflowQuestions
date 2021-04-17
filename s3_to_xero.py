@@ -125,12 +125,7 @@ def upload_file_xero():
     print(f'xero_tenant_id ==> {xero_tenant_id}')
     # post_url = 'https://api.xero.com/files.xro/1.0/Files/'
     post_url = 'https://api.xero.com/files.xro/1.0//Files'
-    # files = {'file': open(get_full_path("../../data/in_test_upload.pdf"), 'rb'),'Content-Type':'application/pdf','Name':'in_test_upload.pdf'}
-    # files = {'file': open(get_full_path("../../data/in_test_upload.pdf"), 'rb')}
     pay_part = [{"Content-Disposition": 'form-data; name=Xero; filename=icon-small.png', "Content-Type": "image/png"}]
-    # files = {'file': open(get_full_path("../../data/in_test_upload.pdf"), 'rb')}
-    # files = {'file': open(get_full_path("../../data/Data Mining1.png"), 'rb')} 'Content-Disposition': 'form-data; name=in_test_upload.pdf; filename=in_test_upload.pdf',
-    # files = {'file': ('in_test_upload.pdf', open(get_full_path("../../data/in_test_upload.pdf"), 'rb'), 'application/pdf', {})}
     # I'm here
     # I need to all payload in the request with content type=application/pdf
     '''----------[RANDOM_STRING_BOUNDARY]
@@ -178,82 +173,20 @@ Content-Type: application/pdf
 
         print(f'Second Uploading Responsoe ==> {second_response}')
 
-    # xero_output = open(get_full_path("../../data/up_loadxero_output.txt"), 'w')
-    # xero_output.write(response.text)
-    # xero_output.close()
     xero_output_json = open(get_full_path("../../data/upload_xero_output.json"), 'w')
     json.dump(response.text, xero_output_json, ensure_ascii=False, indent=4)
     xero_output_json.close()
 
 
-import requests
-import json
-import base64
+def start(event, context):
+    logging.info(f'event is ==> {event}')
+    logging.info(f'context is ==>{context}')
+    old_tokens = xero_auth()
+    print(f'Old Auth Token ==>{old_tokens}')
+    XeroRefreshToken(old_tokens[1])
+    get_files_xero()
+    upload_file_xero()
 
 
-def encode(data: bytes):
-    """
-    Return base-64 encoded value of binary data.
-    """
-    return base64.b64encode(data)
-
-
-def decode(data: str):
-    """
-    Return decoded value of a base-64 encoded string.
-    """
-    return base64.b64decode(data.encode())
-
-
-def get_pdf_data(filename):
-    """
-    Open pdf file in binary mode,
-    return a string encoded in base-64.
-    """
-    with open(filename, 'rb') as file:
-        return encode(file.read())
-
-
-def send_pdf_data(filename_list, encoded_pdf_data):
-    data = {}
-    # *Put whatever you want in data dict*
-    # Create content dict.
-    content = [dict([("name", filename), ("data", pdf_data)])
-               for (filename, pdf_data) in zip(filename_list, encoded_pdf_data)]
-    data["content"] = content
-    token='eyJhbGciOiJSUzI1NiIsImtpZCI6IjFDQUY4RTY2NzcyRDZEQzAyOEQ2NzI2RkQwMjYxNTgxNTcwRUZDMTkiLCJ0eXAiOiJKV1QiLCJ4NXQiOiJISy1PWm5jdGJjQW8xbkp2MENZVmdWY09fQmsifQ.eyJuYmYiOjE2MTg1Nzk3NjQsImV4cCI6MTYxODU4MTU2NCwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS54ZXJvLmNvbSIsImF1ZCI6Imh0dHBzOi8vaWRlbnRpdHkueGVyby5jb20vcmVzb3VyY2VzIiwiY2xpZW50X2lkIjoiMTgwRDZGNEQyMEJDNEUyODgzNzcwRkE0NzhDNUI4QTAiLCJzdWIiOiI0Mzg1ZTIxYjExMTQ1ZGIwYmIyMGVlOWZlYzE5NDM2NyIsImF1dGhfdGltZSI6MTYxODU3NzgzNiwieGVyb191c2VyaWQiOiI1ZjcwZTQzMy0yZjczLTQ1OGUtYWFhYy05OTYxNTNjZjUxYTYiLCJnbG9iYWxfc2Vzc2lvbl9pZCI6Ijc2NjY2NjE0NWI2NDRkYTA4N2RkMzMxYzQ4Y2U0Y2NhIiwianRpIjoiNzVlY2VkOTIxNmU0YjZjNTNiMDNmNmMxNTNlZWFmZWIiLCJhdXRoZW50aWNhdGlvbl9ldmVudF9pZCI6ImQxMTYzYWJhLTZiYjgtNGQ4Ny1iNWZmLTM2ZThlODVkMzlmYyIsInNjb3BlIjpbImVtYWlsIiwicHJvZmlsZSIsIm9wZW5pZCIsImFjY291bnRpbmcucmVwb3J0cy5yZWFkIiwiYWNjb3VudGluZy5hdHRhY2htZW50cy5yZWFkIiwiZmlsZXMiLCJwcm9qZWN0cyIsImFjY291bnRpbmcuc2V0dGluZ3MiLCJhY2NvdW50aW5nLnNldHRpbmdzLnJlYWQiLCJhY2NvdW50aW5nLmF0dGFjaG1lbnRzIiwiZmlsZXMucmVhZCIsImFjY291bnRpbmcudHJhbnNhY3Rpb25zIiwiYWNjb3VudGluZy5qb3VybmFscy5yZWFkIiwiYWNjb3VudGluZy50cmFuc2FjdGlvbnMucmVhZCIsImFzc2V0cyIsImFjY291bnRpbmcuY29udGFjdHMiLCJhY2NvdW50aW5nLmNvbnRhY3RzLnJlYWQiLCJvZmZsaW5lX2FjY2VzcyJdfQ.sV_4lhlp1iwjkLy_IdGFeE7E9JAWnSQQwrMDL5zo9fBuK55H0y6zKJXuieu433FtJk5olrg-wcIr-v5nirg4Nx1LK9C9QSKXifYJdwL_K805zQfa1xUjqZrOTjtWjQh6d1Ac_4D_rryGWMbjUQJxCdbgRDQkr5H2EX8jQ5av3-dBePh-z5hYUN_RgeyehyLtG52CQwvf_dPly3-u0lNR-AL-N7oysXTU281kK0NiOh0DpJRJlQLm_tJuzoxOORfh534mpUNA1HhoyEdbN01Zm-kAyHyACjcQ6LVyjiksD8mJC7-XpvXRy_jBAdn44JFTojkn2AdKriKj2hg_B8Zgkw'
-    data = json.dumps(data)  # Convert it to json.
-    requests.post("https://api.xero.com/files.xro/1.0//Files",
-                  headers={
-                      'Authorization': f'Bearer {token}',
-                      'Xero-tenant-id': 'd2210681-283f-4bf7-8d82-b3fcba5643c1',
-                      # 'Accept': 'application/json',
-                      'Content-type': 'multipart/form-data; boundary=JLQPFBPUP0',
-                      'Content-Length': '1068',
-                      'User-Agent': 'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1866.237 Safari/537.36',
-                      # "accept-encoding": "gzip, deflate, br"
-                  },
-                  data=data)
-
-
-def main():
-    filename_list = ["/home/mobin/PycharmProjects/s3toxero/data/in_test_upload.pdf",
-                     "/home/mobin/PycharmProjects/s3toxero/data/in_test_upload_manual.pdf"]
-    pdf_blob_data = [get_pdf_data(filename) for filename
-                     in filename_list]
-    send_pdf_data(filename_list=['in_test_upload.pdf','in_test_upload_manual.pdf'],encoded_pdf_data=pdf_blob_data)
-
-main()
-
-# def start(event, context):
-#     logging.info(f'event is ==> {event}')
-#     logging.info(f'context is ==>{context}')
-#     old_tokens = xero_auth()
-#     print(f'Old Auth Token ==>{old_tokens}')
-#     XeroRefreshToken(old_tokens[1])
-#     get_files_xero()
-#     upload_file_xero()
-#
-#
-# if __name__ == "__main__":
-#     start(event='hello from fargate==>task==>container!', context=None)
+if __name__ == "__main__":
+    start(event='hello from fargate==>task==>container!', context=None)
